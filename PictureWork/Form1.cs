@@ -18,6 +18,7 @@ namespace PictureWork
         static float[,] R;
         static float[,] G;
         static float[,] B;
+        int blurAmount=1;
 
         public Form1()
         {
@@ -131,6 +132,40 @@ namespace PictureWork
             {
                 picBox2.Image = (Bitmap)picBox1.Image.Clone();
             }
+        }
+
+        private void BlurBut_Click(object sender, EventArgs e)
+        {
+            
+            Bitmap input = new Bitmap(picBox1.Image);
+            Bitmap output = new Bitmap(w,h);
+            for (int i = blurAmount; i <= w - blurAmount; i++)
+            {
+                for (int j = blurAmount; j <= h - blurAmount; j++)
+                {
+                    try
+                    {
+                        Color prevX = input.GetPixel(i - blurAmount, j);
+                        Color nextX = input.GetPixel(i + blurAmount, j);
+                        Color prevY = input.GetPixel(i, j - blurAmount);
+                        Color nextY = input.GetPixel(i, j + blurAmount);
+
+                        int avgR = (int)((prevX.R + nextX.R + prevY.R + nextY.R) / 4);
+                        int avgG = (int)((prevX.G + nextX.G + prevY.G + nextY.G) / 4);
+                        int avgB = (int)((prevX.B + nextX.B + prevY.B + nextY.B) / 4);
+
+                        input.SetPixel(i, j, Color.FromArgb(avgR, avgG, avgB));
+    
+                    }
+                    catch (Exception) { }
+                }
+            }
+            picBox2.Image = input;
+        }
+
+        private void updateBlur(object sender, EventArgs e)
+        {
+            blurAmount = int.Parse(trackBar1.Value.ToString());
         }
 
         private void prBut_Click(object sender, EventArgs e)
