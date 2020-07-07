@@ -13,7 +13,7 @@ namespace PictureWork
 
     public partial class Form1 : Form
     {
-        static int h, w;
+        static int h, w, changeimg = 0;
         static float[,] A;
         static float[,] R;
         static float[,] G;
@@ -39,6 +39,7 @@ namespace PictureWork
                     G[i, j] = (float)((pixel & 0x0000FF00) >> 8); // зеленый GREEN от 0 до 255
                     B[i, j] = (float)(pixel & 0x000000FF); // синий BLUE от 0 до 255
                 }
+            changeimg = 0;
         }
 
 
@@ -61,6 +62,7 @@ namespace PictureWork
                     R = new float[w, h];
                     G = new float[w, h];
                     B = new float[w, h];
+                    changeimg = 1;
                 }
                 catch // в случае ошибки выводим MessageBox
                 {
@@ -104,7 +106,10 @@ namespace PictureWork
             {
                 // создаём Bitmap для черно-белого изображения
                 Bitmap output = new Bitmap(w, h);
-                GetRGBA();
+                if (changeimg == 1)
+                {
+                    GetRGBA();
+                }
                 // перебираем в циклах все пиксели исходного изображения ось Х из левого верзнего угла вправо, Y - вниз
                 for (int j = 0; j < h; j++) 
                     for (int i = 0; i < w; i++)
@@ -120,11 +125,19 @@ namespace PictureWork
             }
         }
 
+        private void button1_Click(object sender, EventArgs e)
+        {
+            picBox2.Image = (Bitmap)picBox1.Image.Clone();
+        }
+
         private void prBut_Click(object sender, EventArgs e)
         {
             // создаём Bitmap для прозрачного изображения
             Bitmap output = new Bitmap(w, h);
-            GetRGBA();
+            if (changeimg == 1)
+            {
+                GetRGBA();
+            }
             // перебираем в циклах все пиксели исходного изображения ось Х из левого верзнего угла вправо, Y - вниз
             for (int j = 0; j < h; j++)
                 for (int i = 0; i < w; i++)

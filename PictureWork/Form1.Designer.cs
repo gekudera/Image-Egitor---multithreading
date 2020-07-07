@@ -35,6 +35,7 @@
             this.SaveBut = new System.Windows.Forms.Button();
             this.prBut = new System.Windows.Forms.Button();
             this.Num1 = new System.Windows.Forms.NumericUpDown();
+            this.button1 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.picBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picBox2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.Num1)).BeginInit();
@@ -108,11 +109,22 @@
             this.Num1.TabIndex = 7;
             this.Num1.ValueChanged += new System.EventHandler(this.numericUpDown2_ValueChanged);
             // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(296, 263);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(84, 29);
+            this.button1.TabIndex = 8;
+            this.button1.Text = "Cancel";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(684, 372);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.Num1);
             this.Controls.Add(this.prBut);
             this.Controls.Add(this.SaveBut);
@@ -138,6 +150,7 @@
         private System.Windows.Forms.Button SaveBut;
         private System.Windows.Forms.Button prBut;
         private System.Windows.Forms.NumericUpDown Num1;
+        private System.Windows.Forms.Button button1;
     }
 }
 
