@@ -74,7 +74,7 @@ namespace PictureWork
 
         private void SaveBut_Click(object sender, EventArgs e)
         {
-            if (picBox2.Image != null) // если изображение в pictureBox2 имеется
+            if (picBox2.Image != null)
             {
                 SaveFileDialog sfd = new SaveFileDialog();
                 sfd.Title = "Сохранить картинку как...";
@@ -127,29 +127,36 @@ namespace PictureWork
 
         private void button1_Click(object sender, EventArgs e)
         {
-            picBox2.Image = (Bitmap)picBox1.Image.Clone();
+            if (picBox1.Image != null) 
+            {
+                picBox2.Image = (Bitmap)picBox1.Image.Clone();
+            }
         }
 
         private void prBut_Click(object sender, EventArgs e)
         {
-            // создаём Bitmap для прозрачного изображения
-            Bitmap output = new Bitmap(w, h);
-            if (changeimg == 1)
+            if (picBox1.Image != null) 
             {
-                GetRGBA();
-            }
-            // перебираем в циклах все пиксели исходного изображения ось Х из левого верзнего угла вправо, Y - вниз
-            for (int j = 0; j < h; j++)
-                for (int i = 0; i < w; i++)
+                // создаём Bitmap для прозрачного изображения
+                Bitmap output = new Bitmap(w, h);
+                if (changeimg == 1)
                 {
-                    int chisl = Convert.ToInt32(Num1.Value);
-                    A[i,j] = chisl*0.01f* A[i,j];
-                    // собираем новый пиксель по частям (по каналам)
-                    UInt32 newPixel = ((UInt32)A[i,j] << 24) | ((UInt32)R[i,j] << 16) | ((UInt32)G[i,j] << 8) | ((UInt32)B[i,j]);
-                    // добавляем его в Bitmap нового изображения
-                    output.SetPixel(i, j, Color.FromArgb((int)newPixel));
+                    GetRGBA();
                 }
-            picBox2.Image = output;
+                int chisl = Convert.ToInt32(Num1.Value);
+                if (chisl == 0) changeimg = 1;
+                // перебираем в циклах все пиксели исходного изображения ось Х из левого верзнего угла вправо, Y - вниз
+                for (int j = 0; j < h; j++)
+                    for (int i = 0; i < w; i++)
+                    {
+                        A[i, j] = chisl * 0.01f * A[i, j];
+                        // собираем новый пиксель по частям (по каналам)
+                        UInt32 newPixel = ((UInt32)A[i, j] << 24) | ((UInt32)R[i, j] << 16) | ((UInt32)G[i, j] << 8) | ((UInt32)B[i, j]);
+                        // добавляем его в Bitmap нового изображения
+                        output.SetPixel(i, j, Color.FromArgb((int)newPixel));
+                    }
+                picBox2.Image = output;
+            }
         }
 
         private void numericUpDown2_ValueChanged(object sender, EventArgs e)
