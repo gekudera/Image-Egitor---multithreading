@@ -13,10 +13,34 @@ namespace PictureWork
 
     public partial class Form1 : Form
     {
+        static int h, w;
+        static float[,] A;
+        static float[,] R;
+        static float[,] G;
+        static float[,] B;
+
         public Form1()
         {
             InitializeComponent();
         }
+
+        public void GetRGBA()
+        {
+            // создаём Bitmap из изображения, находящегося в pictureBox1
+            Bitmap input = new Bitmap(picBox1.Image);
+            for (int j = 0; j < input.Height; j++)
+                for (int i = 0; i < input.Width; i++)
+                {
+                    // получаем (i, j) пиксель
+                    UInt32 pixel = (UInt32)(input.GetPixel(i, j).ToArgb());
+                    // получаем компоненты цветов пикселя
+                    A[i, j] = (float)((pixel & 0xFF000000) >> 24); // прозрачность Alpha
+                    R[i, j] = (float)((pixel & 0x00FF0000) >> 16); // красный RED в диапозоне от 0 до 255
+                    G[i, j] = (float)((pixel & 0x0000FF00) >> 8); // зеленый GREEN от 0 до 255
+                    B[i, j] = (float)(pixel & 0x000000FF); // синий BLUE от 0 до 255
+                }
+        }
+
 
         private void OpenBut_Click(object sender, EventArgs e)
         {
@@ -31,6 +55,12 @@ namespace PictureWork
                 {
                     // загружаем изображение
                     picBox1.Image = new Bitmap(ofd.FileName);
+                    w = (picBox1.Image).Width;
+                    h = (picBox1.Image).Height;
+                    A = new float[w, h];
+                    R = new float[w, h];
+                    G = new float[w, h];
+                    B = new float[w, h];
                 }
                 catch // в случае ошибки выводим MessageBox
                 {
@@ -72,61 +102,40 @@ namespace PictureWork
         {
             if (picBox1.Image != null) // если изображение в pictureBox1 имеется
             {
-                // создаём Bitmap из изображения, находящегося в pictureBox1
-                Bitmap input = new Bitmap(picBox1.Image);
                 // создаём Bitmap для черно-белого изображения
-                Bitmap output = new Bitmap(input.Width, input.Height);
+                Bitmap output = new Bitmap(w, h);
+                GetRGBA();
                 // перебираем в циклах все пиксели исходного изображения ось Х из левого верзнего угла вправо, Y - вниз
-                for (int j = 0; j < input.Height; j++) 
-                    for (int i = 0; i < input.Width; i++)
+                for (int j = 0; j < h; j++) 
+                    for (int i = 0; i < w; i++)
                     {
-                        // получаем (i, j) пиксель
-                        UInt32 pixel = (UInt32)(input.GetPixel(i, j).ToArgb());
-                        // получаем компоненты цветов пикселя
-                        float A = (float)((pixel & 0xFF000000) >> 24); // прозрачность Alpha
-                        float R = (float)((pixel & 0x00FF0000) >> 16); // красный RED в диапозоне от 0 до 255
-                        float G = (float)((pixel & 0x0000FF00) >> 8); // зеленый GREEN от 0 до 255
-                        float B = (float)(pixel & 0x000000FF); // синий BLUE от 0 до 255
-
-
                        // делаем цвет черно-белым (оттенки серого) - находим среднее арифметическое
-                        R = G = B = (R + G + B) / 3.0f;
+                        R[i,j] = G[i,j] = B[i,j] = (R[i,j] + G[i,j] + B[i,j]) / 3.0f;
                         // собираем новый пиксель по частям (по каналам)
-                        UInt32 newPixel = 0xFF000000 | ((UInt32)R << 16) | ((UInt32)G << 8) | ((UInt32)B);
+                        UInt32 newPixel = 0xFF000000 | ((UInt32)R[i,j] << 16) | ((UInt32)G[i,j] << 8) | ((UInt32)B[i,j]);
                         // добавляем его в Bitmap нового изображения
                         output.SetPixel(i, j, Color.FromArgb((int)newPixel));
                     }
-                // выводим черно-белый Bitmap в pictureBox2
                 picBox2.Image = output;
             }
         }
 
         private void prBut_Click(object sender, EventArgs e)
         {
-            // создаём Bitmap из изображения, находящегося в pictureBox1
-            Bitmap input = new Bitmap(picBox1.Image);
             // создаём Bitmap для прозрачного изображения
-            Bitmap output = new Bitmap(input.Width, input.Height);
+            Bitmap output = new Bitmap(w, h);
+            GetRGBA();
             // перебираем в циклах все пиксели исходного изображения ось Х из левого верзнего угла вправо, Y - вниз
-            for (int j = 0; j < input.Height; j++)
-                for (int i = 0; i < input.Width; i++)
+            for (int j = 0; j < h; j++)
+                for (int i = 0; i < w; i++)
                 {
-                    // получаем (i, j) пиксель
-                    UInt32 pixel = (UInt32)(input.GetPixel(i, j).ToArgb());
-                    // получаем компоненты цветов пикселя
-                    float A = (float)((pixel & 0xFF000000) >> 24); // прозрачность Alpha
-                    float R = (float)((pixel & 0x00FF0000) >> 16); // красный RED в диапозоне от 0 до 255
-                    float G = (float)((pixel & 0x0000FF00) >> 8); // зеленый GREEN от 0 до 255
-                    float B = (float)(pixel & 0x000000FF); // синий BLUE от 0 до 255
-
                     int chisl = Convert.ToInt32(Num1.Value);
-                    A = chisl*0.01f* A;
+                    A[i,j] = chisl*0.01f* A[i,j];
                     // собираем новый пиксель по частям (по каналам)
-                    UInt32 newPixel = ((UInt32)A << 24) | ((UInt32)R << 16) | ((UInt32)G << 8) | ((UInt32)B);
+                    UInt32 newPixel = ((UInt32)A[i,j] << 24) | ((UInt32)R[i,j] << 16) | ((UInt32)G[i,j] << 8) | ((UInt32)B[i,j]);
                     // добавляем его в Bitmap нового изображения
                     output.SetPixel(i, j, Color.FromArgb((int)newPixel));
                 }
-            // выводим черно-белый Bitmap в pictureBox2
             picBox2.Image = output;
         }
 
