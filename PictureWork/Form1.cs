@@ -14,11 +14,14 @@ namespace PictureWork
     public partial class Form1 : Form
     {
         static int h, w, changeimg = 0;
-        static float[,] A;
-        static float[,] R;
-        static float[,] G;
-        static float[,] B;
-        int blurAmount=1;
+        //static int p = 2; //количество потоков
+        public float[,] A;
+        public float[,] R;
+        public float[,] G;
+        public float[,] B;
+        int blurAmount = 1;
+        //int[,] indexes = new int[p, 2]; // объявление двумерного массива индексов
+
 
         public Form1()
         {
@@ -27,20 +30,18 @@ namespace PictureWork
 
         public void GetRGBA()
         {
-            // создаём Bitmap из изображения, находящегося в pictureBox1
             Bitmap input = new Bitmap(picBox1.Image);
-            for (int j = 0; j < input.Height; j++)
-                for (int i = 0; i < input.Width; i++)
-                {
-                    // получаем (i, j) пиксель
-                    UInt32 pixel = (UInt32)(input.GetPixel(i, j).ToArgb());
-                    // получаем компоненты цветов пикселя
-                    A[i, j] = (float)((pixel & 0xFF000000) >> 24); // прозрачность Alpha
-                    R[i, j] = (float)((pixel & 0x00FF0000) >> 16); // красный RED в диапозоне от 0 до 255
-                    G[i, j] = (float)((pixel & 0x0000FF00) >> 8); // зеленый GREEN от 0 до 255
-                    B[i, j] = (float)(pixel & 0x000000FF); // синий BLUE от 0 до 255
-                }
-            changeimg = 0;
+                for (int j = 0; j < input.Height; j++)
+                    for (int i = 0; i < input.Width; i++)
+                    {
+                        // получаем (i, j) пиксель
+                        UInt32 pixel = (UInt32)(input.GetPixel(i, j).ToArgb());
+                        A[i, j] = (float)((pixel & 0xFF000000) >> 24); // прозрачность Alpha
+                        R[i, j] = (float)((pixel & 0x00FF0000) >> 16); // красный RED в диапозоне от 0 до 255
+                        G[i, j] = (float)((pixel & 0x0000FF00) >> 8); // зеленый GREEN от 0 до 255
+                        B[i, j] = (float)(pixel & 0x000000FF); // синий BLUE от 0 до 255
+                    }
+                changeimg = 0;
         }
 
 
@@ -103,10 +104,9 @@ namespace PictureWork
 
         private void ModBut_Click(object sender, EventArgs e)
         {
+            Bitmap output1 = new Bitmap(w, h);
             if (picBox1.Image != null) // если изображение в pictureBox1 имеется
             {
-                // создаём Bitmap для черно-белого изображения
-                Bitmap output = new Bitmap(w, h);
                 if (changeimg == 1)
                 {
                     GetRGBA();
@@ -120,9 +120,9 @@ namespace PictureWork
                         // собираем новый пиксель по частям (по каналам)
                         UInt32 newPixel = 0xFF000000 | ((UInt32)R[i,j] << 16) | ((UInt32)G[i,j] << 8) | ((UInt32)B[i,j]);
                         // добавляем его в Bitmap нового изображения
-                        output.SetPixel(i, j, Color.FromArgb((int)newPixel));
+                        output1.SetPixel(i, j, Color.FromArgb((int)newPixel));
                     }
-                picBox2.Image = output;
+                picBox2.Image = output1;
             }
         }
 
@@ -136,23 +136,26 @@ namespace PictureWork
 
         private void BlurBut_Click(object sender, EventArgs e)
         {
-            
             Bitmap input = new Bitmap(picBox1.Image);
-            Bitmap output = new Bitmap(w,h);
+            GetRGBA();
             for (int i = blurAmount; i <= w - blurAmount; i++)
             {
                 for (int j = blurAmount; j <= h - blurAmount; j++)
                 {
                     try
                     {
-                        Color prevX = input.GetPixel(i - blurAmount, j);
-                        Color nextX = input.GetPixel(i + blurAmount, j);
-                        Color prevY = input.GetPixel(i, j - blurAmount);
-                        Color nextY = input.GetPixel(i, j + blurAmount);
+            
+                        int avgR = (int)((R[i - blurAmount, j] + R[i + blurAmount, j] + R[i, j - blurAmount]
+                            + R[i, j + blurAmount] + R[i + blurAmount, j - blurAmount] + R[i + blurAmount, j + blurAmount] 
+                            + R[i - blurAmount, j - blurAmount] + R[i - blurAmount, j +blurAmount])/8);
 
-                        int avgR = (int)((prevX.R + nextX.R + prevY.R + nextY.R) / 4);
-                        int avgG = (int)((prevX.G + nextX.G + prevY.G + nextY.G) / 4);
-                        int avgB = (int)((prevX.B + nextX.B + prevY.B + nextY.B) / 4);
+                        int avgG = (int)((G[i - blurAmount, j] + G[i + blurAmount, j] + G[i, j - blurAmount]
+                            + G[i, j + blurAmount] + G[i + blurAmount, j - blurAmount] + G[i + blurAmount, j + blurAmount]
+                            + G[i - blurAmount, j - blurAmount] + G[i - blurAmount, j + blurAmount])/8);
+
+                        int avgB = (int)((B[i - blurAmount, j] + B[i + blurAmount, j] + B[i, j - blurAmount]
+                            + B[i, j + blurAmount] + B[i + blurAmount, j - blurAmount] + B[i + blurAmount, j + blurAmount]
+                            + B[i - blurAmount, j - blurAmount] + B[i - blurAmount, j + blurAmount])/8);
 
                         input.SetPixel(i, j, Color.FromArgb(avgR, avgG, avgB));
     
@@ -172,8 +175,7 @@ namespace PictureWork
         {
             if (picBox1.Image != null) 
             {
-                // создаём Bitmap для прозрачного изображения
-                Bitmap output = new Bitmap(w, h);
+                Bitmap output2 = new Bitmap(w, h);
                 if (changeimg == 1)
                 {
                     GetRGBA();
@@ -188,9 +190,9 @@ namespace PictureWork
                         // собираем новый пиксель по частям (по каналам)
                         UInt32 newPixel = ((UInt32)A[i, j] << 24) | ((UInt32)R[i, j] << 16) | ((UInt32)G[i, j] << 8) | ((UInt32)B[i, j]);
                         // добавляем его в Bitmap нового изображения
-                        output.SetPixel(i, j, Color.FromArgb((int)newPixel));
+                        output2.SetPixel(i, j, Color.FromArgb((int)newPixel));
                     }
-                picBox2.Image = output;
+                picBox2.Image = output2;
             }
         }
 

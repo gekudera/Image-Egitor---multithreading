@@ -80,9 +80,9 @@
             // 
             // WhiteBlackBut
             // 
-            this.WhiteBlackBut.Location = new System.Drawing.Point(296, 77);
+            this.WhiteBlackBut.Location = new System.Drawing.Point(296, 59);
             this.WhiteBlackBut.Name = "WhiteBlackBut";
-            this.WhiteBlackBut.Size = new System.Drawing.Size(84, 23);
+            this.WhiteBlackBut.Size = new System.Drawing.Size(84, 29);
             this.WhiteBlackBut.TabIndex = 3;
             this.WhiteBlackBut.Text = "White-Black";
             this.WhiteBlackBut.UseVisualStyleBackColor = true;
@@ -100,7 +100,7 @@
             // 
             // prBut
             // 
-            this.prBut.Location = new System.Drawing.Point(296, 106);
+            this.prBut.Location = new System.Drawing.Point(296, 94);
             this.prBut.Name = "prBut";
             this.prBut.Size = new System.Drawing.Size(84, 28);
             this.prBut.TabIndex = 5;
@@ -110,7 +110,7 @@
             // 
             // Num1
             // 
-            this.Num1.Location = new System.Drawing.Point(296, 140);
+            this.Num1.Location = new System.Drawing.Point(296, 128);
             this.Num1.Name = "Num1";
             this.Num1.Size = new System.Drawing.Size(65, 20);
             this.Num1.TabIndex = 7;
@@ -130,7 +130,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.label1.Location = new System.Drawing.Point(359, 142);
+            this.label1.Location = new System.Drawing.Point(362, 128);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(18, 15);
             this.label1.TabIndex = 9;
@@ -138,7 +138,7 @@
             // 
             // BlurBut
             // 
-            this.BlurBut.Location = new System.Drawing.Point(296, 166);
+            this.BlurBut.Location = new System.Drawing.Point(296, 165);
             this.BlurBut.Name = "BlurBut";
             this.BlurBut.Size = new System.Drawing.Size(84, 28);
             this.BlurBut.TabIndex = 10;
@@ -155,7 +155,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(297, 201);
+            this.label2.Location = new System.Drawing.Point(300, 196);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(61, 13);
             this.label2.TabIndex = 11;
@@ -163,7 +163,8 @@
             // 
             // trackBar1
             // 
-            this.trackBar1.Location = new System.Drawing.Point(296, 217);
+            this.trackBar1.Location = new System.Drawing.Point(296, 212);
+            this.trackBar1.Maximum = 5;
             this.trackBar1.Name = "trackBar1";
             this.trackBar1.Size = new System.Drawing.Size(81, 45);
             this.trackBar1.TabIndex = 12;
