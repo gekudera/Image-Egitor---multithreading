@@ -7,20 +7,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Threading;
 
 namespace PictureWork
 {
 
     public partial class Form1 : Form
     {
-        static int h, w, changeimg = 0;
-        //static int p = 2; //количество потоков
-        public float[,] A;
-        public float[,] R;
-        public float[,] G;
-        public float[,] B;
+        static int h, w;
+        static Image img;
         int blurAmount = 1;
-        //int[,] indexes = new int[p, 2]; // объявление двумерного массива индексов
+        
 
 
         public Form1()
@@ -28,20 +25,34 @@ namespace PictureWork
             InitializeComponent();
         }
 
-        public void GetRGBA()
+        private Bitmap Blur(Bitmap input)
         {
-            Bitmap input = new Bitmap(picBox1.Image);
-                for (int j = 0; j < input.Height; j++)
-                    for (int i = 0; i < input.Width; i++)
+            for (int i = blurAmount; i <= w - blurAmount; i++)
+            {
+                for (int j = blurAmount; j <= h - blurAmount; j++)
+                {
+                    try
                     {
-                        // получаем (i, j) пиксель
-                        UInt32 pixel = (UInt32)(input.GetPixel(i, j).ToArgb());
-                        A[i, j] = (float)((pixel & 0xFF000000) >> 24); // прозрачность Alpha
-                        R[i, j] = (float)((pixel & 0x00FF0000) >> 16); // красный RED в диапозоне от 0 до 255
-                        G[i, j] = (float)((pixel & 0x0000FF00) >> 8); // зеленый GREEN от 0 до 255
-                        B[i, j] = (float)(pixel & 0x000000FF); // синий BLUE от 0 до 255
+
+                        int avgR = (int)((img.R[i - blurAmount, j] + img.R[i + blurAmount, j] + img.R[i, j - blurAmount]
+                            + img.R[i, j + blurAmount] + img.R[i + blurAmount, j - blurAmount] + img.R[i + blurAmount, j + blurAmount]
+                            + img.R[i - blurAmount, j - blurAmount] + img.R[i - blurAmount, j + blurAmount]) / 8);
+
+                        int avgG = (int)((img.G[i - blurAmount, j] + img.G[i + blurAmount, j] + img.G[i, j - blurAmount]
+                            + img.G[i, j + blurAmount] + img.G[i + blurAmount, j - blurAmount] + img.G[i + blurAmount, j + blurAmount]
+                            + img.G[i - blurAmount, j - blurAmount] + img.G[i - blurAmount, j + blurAmount]) / 8);
+
+                        int avgB = (int)((img.B[i - blurAmount, j] + img.B[i + blurAmount, j] + img.B[i, j - blurAmount]
+                            + img.B[i, j + blurAmount] + img.B[i + blurAmount, j - blurAmount] + img.B[i + blurAmount, j + blurAmount]
+                            + img.B[i - blurAmount, j - blurAmount] + img.B[i - blurAmount, j + blurAmount]) / 8);
+
+                        input.SetPixel(i, j, Color.FromArgb(avgR, avgG, avgB));
+
                     }
-                changeimg = 0;
+                    catch (Exception) { }
+                }
+            }
+            return input;
         }
 
 
@@ -60,11 +71,8 @@ namespace PictureWork
                     picBox1.Image = new Bitmap(ofd.FileName);
                     w = (picBox1.Image).Width;
                     h = (picBox1.Image).Height;
-                    A = new float[w, h];
-                    R = new float[w, h];
-                    G = new float[w, h];
-                    B = new float[w, h];
-                    changeimg = 1;
+                    Bitmap input = new Bitmap(picBox1.Image);
+                    img =new Image(input);
                 }
                 catch // в случае ошибки выводим MessageBox
                 {
@@ -107,18 +115,14 @@ namespace PictureWork
             Bitmap output1 = new Bitmap(w, h);
             if (picBox1.Image != null) // если изображение в pictureBox1 имеется
             {
-                if (changeimg == 1)
-                {
-                    GetRGBA();
-                }
                 // перебираем в циклах все пиксели исходного изображения ось Х из левого верзнего угла вправо, Y - вниз
                 for (int j = 0; j < h; j++) 
                     for (int i = 0; i < w; i++)
                     {
                        // делаем цвет черно-белым (оттенки серого) - находим среднее арифметическое
-                        R[i,j] = G[i,j] = B[i,j] = (R[i,j] + G[i,j] + B[i,j]) / 3.0f;
+                        img.R[i,j] = img.G[i,j] = img.B[i,j] = (img.R[i,j] + img.G[i,j] + img.B[i,j]) / 3.0f;
                         // собираем новый пиксель по частям (по каналам)
-                        UInt32 newPixel = 0xFF000000 | ((UInt32)R[i,j] << 16) | ((UInt32)G[i,j] << 8) | ((UInt32)B[i,j]);
+                        UInt32 newPixel = 0xFF000000 | ((UInt32)img.R[i,j] << 16) | ((UInt32)img.G[i,j] << 8) | ((UInt32)img.B[i,j]);
                         // добавляем его в Bitmap нового изображения
                         output1.SetPixel(i, j, Color.FromArgb((int)newPixel));
                     }
@@ -137,32 +141,7 @@ namespace PictureWork
         private void BlurBut_Click(object sender, EventArgs e)
         {
             Bitmap input = new Bitmap(picBox1.Image);
-            GetRGBA();
-            for (int i = blurAmount; i <= w - blurAmount; i++)
-            {
-                for (int j = blurAmount; j <= h - blurAmount; j++)
-                {
-                    try
-                    {
-            
-                        int avgR = (int)((R[i - blurAmount, j] + R[i + blurAmount, j] + R[i, j - blurAmount]
-                            + R[i, j + blurAmount] + R[i + blurAmount, j - blurAmount] + R[i + blurAmount, j + blurAmount] 
-                            + R[i - blurAmount, j - blurAmount] + R[i - blurAmount, j +blurAmount])/8);
-
-                        int avgG = (int)((G[i - blurAmount, j] + G[i + blurAmount, j] + G[i, j - blurAmount]
-                            + G[i, j + blurAmount] + G[i + blurAmount, j - blurAmount] + G[i + blurAmount, j + blurAmount]
-                            + G[i - blurAmount, j - blurAmount] + G[i - blurAmount, j + blurAmount])/8);
-
-                        int avgB = (int)((B[i - blurAmount, j] + B[i + blurAmount, j] + B[i, j - blurAmount]
-                            + B[i, j + blurAmount] + B[i + blurAmount, j - blurAmount] + B[i + blurAmount, j + blurAmount]
-                            + B[i - blurAmount, j - blurAmount] + B[i - blurAmount, j + blurAmount])/8);
-
-                        input.SetPixel(i, j, Color.FromArgb(avgR, avgG, avgB));
-    
-                    }
-                    catch (Exception) { }
-                }
-            }
+            Blur(input);
             picBox2.Image = input;
         }
 
@@ -176,19 +155,14 @@ namespace PictureWork
             if (picBox1.Image != null) 
             {
                 Bitmap output2 = new Bitmap(w, h);
-                if (changeimg == 1)
-                {
-                    GetRGBA();
-                }
                 int chisl = Convert.ToInt32(Num1.Value);
-                if (chisl == 0) changeimg = 1;
                 // перебираем в циклах все пиксели исходного изображения ось Х из левого верзнего угла вправо, Y - вниз
                 for (int j = 0; j < h; j++)
                     for (int i = 0; i < w; i++)
                     {
-                        A[i, j] = chisl * 0.01f * A[i, j];
+                        img.A[i, j] = chisl * 0.01f * img.A[i, j];
                         // собираем новый пиксель по частям (по каналам)
-                        UInt32 newPixel = ((UInt32)A[i, j] << 24) | ((UInt32)R[i, j] << 16) | ((UInt32)G[i, j] << 8) | ((UInt32)B[i, j]);
+                        UInt32 newPixel = ((UInt32)img.A[i, j] << 24) | ((UInt32)img.R[i, j] << 16) | ((UInt32)img.G[i, j] << 8) | ((UInt32)img.B[i, j]);
                         // добавляем его в Bitmap нового изображения
                         output2.SetPixel(i, j, Color.FromArgb((int)newPixel));
                     }
