@@ -14,10 +14,10 @@ namespace PictureWork
 
     public partial class Form1 : Form
     {
-        static int h, w;
+        static int h, w, p=3;
         static Image img;
         int blurAmount = 1;
-        
+        MyThread[] mt = new MyThread[p];
 
 
         public Form1()
@@ -25,36 +25,28 @@ namespace PictureWork
             InitializeComponent();
         }
 
-        private Bitmap Blur(Bitmap input)
+
+        private int[,] GetIndex(int p)
         {
-            for (int i = blurAmount; i <= w - blurAmount; i++)
+            int np = picBox1.Image.Height / p;
+            int[,] indexes = new int[p, 2]; // объявление двумерного массива
+            for (int i = 0; i < p; i++)
             {
-                for (int j = blurAmount; j <= h - blurAmount; j++)
+                if (i == p - 1)
                 {
-                    try
-                    {
-
-                        int avgR = (int)((img.R[i - blurAmount, j] + img.R[i + blurAmount, j] + img.R[i, j - blurAmount]
-                            + img.R[i, j + blurAmount] + img.R[i + blurAmount, j - blurAmount] + img.R[i + blurAmount, j + blurAmount]
-                            + img.R[i - blurAmount, j - blurAmount] + img.R[i - blurAmount, j + blurAmount]) / 8);
-
-                        int avgG = (int)((img.G[i - blurAmount, j] + img.G[i + blurAmount, j] + img.G[i, j - blurAmount]
-                            + img.G[i, j + blurAmount] + img.G[i + blurAmount, j - blurAmount] + img.G[i + blurAmount, j + blurAmount]
-                            + img.G[i - blurAmount, j - blurAmount] + img.G[i - blurAmount, j + blurAmount]) / 8);
-
-                        int avgB = (int)((img.B[i - blurAmount, j] + img.B[i + blurAmount, j] + img.B[i, j - blurAmount]
-                            + img.B[i, j + blurAmount] + img.B[i + blurAmount, j - blurAmount] + img.B[i + blurAmount, j + blurAmount]
-                            + img.B[i - blurAmount, j - blurAmount] + img.B[i - blurAmount, j + blurAmount]) / 8);
-
-                        input.SetPixel(i, j, Color.FromArgb(avgR, avgG, avgB));
-
-                    }
-                    catch (Exception) { }
+                    indexes[i, 0] = np * i;
+                    indexes[i, 1] = picBox1.Image.Height;
+                }
+                else
+                {
+                    indexes[i, 0] = np * i;
+                    indexes[i, 1] = (np * (i + 1)) - 1;
                 }
             }
-            return input;
+            
+            return indexes;
+            
         }
-
 
         private void OpenBut_Click(object sender, EventArgs e)
         {
@@ -73,6 +65,8 @@ namespace PictureWork
                     h = (picBox1.Image).Height;
                     Bitmap input = new Bitmap(picBox1.Image);
                     img =new Image(input);
+                    MessageBox.Show("Картинка загружена!");
+
                 }
                 catch // в случае ошибки выводим MessageBox
                 {
@@ -140,14 +134,33 @@ namespace PictureWork
 
         private void BlurBut_Click(object sender, EventArgs e)
         {
-            Bitmap input = new Bitmap(picBox1.Image);
-            Blur(input);
-            picBox2.Image = input;
+            int[,] ind = GetIndex(p);
+            for (int i = 0; i < p; i++)
+            {
+                mt[i] = new MyThread(img, blurAmount, ind[i,0], ind[i,1], p);
+            }
+            for (int i = 0; i < p; i++)
+                mt[i].T1.Join();
+
+            //picBox2.Image = mt[1].getBMP();
+
+            Bitmap bm = new Bitmap(picBox1.Image.Width, picBox1.Image.Height);
+            for (int i = 0; i < p; i++)
+            {
+                Bitmap bm1 = mt[i].getBMP();
+                Graphics g = Graphics.FromImage(bm);
+                if (i == 0)
+                    g.DrawImage(bm1, 0, 0, picBox1.Image.Width, bm1.Height);
+                else
+                    g.DrawImage(bm1, 0, i*mt[i-1].bmp.Height-blurAmount, picBox1.Image.Width, bm1.Height);
+                g.Dispose();
+            }
+            picBox2.Image = bm;
         }
 
         private void updateBlur(object sender, EventArgs e)
         {
-            blurAmount = int.Parse(trackBar1.Value.ToString());
+            blurAmount = int.Parse(trackBar1.Value.ToString())*2;
         }
 
         private void prBut_Click(object sender, EventArgs e)

@@ -10,34 +10,21 @@ namespace PictureWork
 {
     class Image
     {
-        private Bitmap input;
+        public Bitmap input;
 
         public float[,] A;
-        
+
         public float[,] R;
 
         public float[,] G;
 
         public float[,] B;
 
-        public Thread Thrd;
 
 
         public Image(Bitmap inp)
         {
             input = inp;
-            Thrd = new Thread(this.Run);
-            Thrd.Start(); //начать поток
-        }
-
-        void Run()
-        {
-            Image1(input);
-        }
-
-        public void Image1(Bitmap input)
-        {
-            
             A = new float[input.Width, input.Height];
             B = new float[input.Width, input.Height];
             R = new float[input.Width, input.Height];
@@ -51,6 +38,8 @@ namespace PictureWork
                     R[i, j] = (float)((pixel & 0x00FF0000) >> 16); // красный RED в диапозоне от 0 до 255
                     G[i, j] = (float)((pixel & 0x0000FF00) >> 8); // зеленый GREEN от 0 до 255
                     B[i, j] = (float)(pixel & 0x000000FF); // синий BLUE от 0 до 255
+
+
                 }
         }
     }
