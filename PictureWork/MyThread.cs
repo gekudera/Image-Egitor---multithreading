@@ -35,6 +35,7 @@ namespace PictureWork
             T1.Start(); //начать поток
         }
 
+        
         private void Run()
         {
             Blur(bmp);
@@ -98,7 +99,6 @@ namespace PictureWork
                 }
             }
         }
-
 
         public Bitmap getBMP()
         {

@@ -8,17 +8,17 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Threading;
+using System.Diagnostics;
 
 namespace PictureWork
 {
 
     public partial class Form1 : Form
     {
-        static int h, w, p=3;
-        static Image img;
+        static Image img; //изменяемое изображение
+        static Image first; //изображение в первом пикчербокс
         int blurAmount = 1;
-        MyThread[] mt = new MyThread[p];
-
+        static Stopwatch sw = new Stopwatch();
 
         public Form1()
         {
@@ -48,8 +48,23 @@ namespace PictureWork
             
         }
 
-        private void OpenBut_Click(object sender, EventArgs e)
+        private int GetP()
         {
+            int p;
+            int S = img.input.Width * img.input.Height;
+
+            if (S <= 800000)
+                p = 2;
+            else if ((S > 800000) && (S <= 25000000))
+                p = 4;
+            else p = 6;
+
+            return p;
+        }
+
+        private async void OpenBut_Click(object sender, EventArgs e)
+        {
+            picBox2.Image = null;
             // диалог для выбора файла
             OpenFileDialog ofd = new OpenFileDialog();
             // фильтр форматов файлов
@@ -59,12 +74,15 @@ namespace PictureWork
             {
                 try
                 {
+                    OpenBut.Enabled = SaveBut.Enabled = button1.Enabled = WhiteBlackBut.Enabled= BlurBut.Enabled = prBut.Enabled= false;
                     // загружаем изображение
                     picBox1.Image = new Bitmap(ofd.FileName);
-                    w = (picBox1.Image).Width;
-                    h = (picBox1.Image).Height;
                     Bitmap input = new Bitmap(picBox1.Image);
-                    img =new Image(input);
+                    img = new Image(input);
+                    await Task.Run(() => { RunProcessing(input); });
+                    first = new Image(input);
+                    img.Copy(first);
+                    OpenBut.Enabled = SaveBut.Enabled = button1.Enabled = WhiteBlackBut.Enabled = BlurBut.Enabled = prBut.Enabled= true;
                     MessageBox.Show("Картинка загружена!");
 
                 }
@@ -74,6 +92,20 @@ namespace PictureWork
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
+        }
+
+
+        private void RunProcessing(Bitmap input)
+        {
+            for (int j = 0; j < input.Height; j++)
+                for (int i = 0; i < input.Width; i++)
+                {
+                    UInt32 pixel = (UInt32)(input.GetPixel(i, j).ToArgb());
+                    img.A[i, j] = (float)((pixel & 0xFF000000) >> 24); // прозрачность Alpha
+                    img.R[i, j] = (float)((pixel & 0x00FF0000) >> 16); // красный RED в диапозоне от 0 до 255
+                    img.G[i, j] = (float)((pixel & 0x0000FF00) >> 8); // зеленый GREEN от 0 до 255
+                    img.B[i, j] = (float)(pixel & 0x000000FF); // синий BLUE от 0 до 255
+                }
         }
 
         private void SaveBut_Click(object sender, EventArgs e)
@@ -106,6 +138,8 @@ namespace PictureWork
 
         private void ModBut_Click(object sender, EventArgs e)
         {
+            int w = picBox1.Image.Width;
+            int h = picBox1.Image.Height;
             Bitmap output1 = new Bitmap(w, h);
             if (picBox1.Image != null) // если изображение в pictureBox1 имеется
             {
@@ -129,12 +163,16 @@ namespace PictureWork
             if (picBox1.Image != null) 
             {
                 picBox2.Image = (Bitmap)picBox1.Image.Clone();
+                first.Copy(img);
             }
         }
 
         private void BlurBut_Click(object sender, EventArgs e)
         {
+            int p = GetP();
             int[,] ind = GetIndex(p);
+            MyThread[] mt = new MyThread[p];
+            sw.Start();
             for (int i = 0; i < p; i++)
             {
                 mt[i] = new MyThread(img, blurAmount, ind[i,0], ind[i,1], p);
@@ -156,6 +194,10 @@ namespace PictureWork
                 g.Dispose();
             }
             picBox2.Image = bm;
+            RunProcessing(bm); //перерасчет АРГБ
+            sw.Stop();
+            long time = sw.ElapsedMilliseconds;
+            MessageBox.Show("Время работы " + p + " потоков: " + time);
         }
 
         private void updateBlur(object sender, EventArgs e)
@@ -167,6 +209,8 @@ namespace PictureWork
         {
             if (picBox1.Image != null) 
             {
+                int w = picBox1.Image.Width;
+                int h = picBox1.Image.Height;
                 Bitmap output2 = new Bitmap(w, h);
                 int chisl = Convert.ToInt32(Num1.Value);
                 // перебираем в циклах все пиксели исходного изображения ось Х из левого верзнего угла вправо, Y - вниз
@@ -180,6 +224,8 @@ namespace PictureWork
                         output2.SetPixel(i, j, Color.FromArgb((int)newPixel));
                     }
                 picBox2.Image = output2;
+                if (chisl==0)
+                    img = new Image((Bitmap)picBox1.Image.Clone());
             }
         }
 
